@@ -49,7 +49,7 @@ var (
 )
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa446645.aspx
-func GetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, owner, group **windows.SID, dacl **ACL, sacl, secDesc *windows.Handle) error {
+func GetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, owner, group **windows.SID, dacl, sacl **ACL, secDesc *windows.Handle) error {
 	ret, _, err := procGetNamedSecurityInfoW.Call(
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(objectName))),
 		uintptr(objectType),
@@ -67,15 +67,15 @@ func GetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, o
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa379579.aspx
-func SetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, owner, group *windows.SID, dacl, sacl windows.Handle) error {
+func SetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, owner, group *windows.SID, dacl, sacl *ACL) error {
 	ret, _, err := procSetNamedSecurityInfoW.Call(
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(objectName))),
 		uintptr(objectType),
 		uintptr(secInfo),
 		uintptr(unsafe.Pointer(owner)),
 		uintptr(unsafe.Pointer(group)),
-		uintptr(dacl),
-		uintptr(sacl),
+		uintptr(unsafe.Pointer(dacl)),
+		uintptr(unsafe.Pointer(sacl)),
 	)
 	if ret != 0 {
 		return err

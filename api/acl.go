@@ -2,11 +2,7 @@
 
 package api
 
-import (
-	"golang.org/x/sys/windows"
-
-	"unsafe"
-)
+import "unsafe"
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa379284.aspx
 const (
@@ -133,11 +129,11 @@ type ExplicitAccess struct {
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa379576.aspx
-func SetEntriesInAcl(entries []ExplicitAccess, oldAcl windows.Handle, newAcl *windows.Handle) error {
+func SetEntriesInAcl(entries []ExplicitAccess, oldAcl *ACL, newAcl **ACL) error {
 	ret, _, err := procSetEntriesInAclW.Call(
 		uintptr(len(entries)),
 		uintptr(unsafe.Pointer(&entries[0])),
-		uintptr(oldAcl),
+		uintptr(unsafe.Pointer(oldAcl)),
 		uintptr(unsafe.Pointer(newAcl)),
 	)
 	if ret != 0 {
