@@ -47,7 +47,7 @@ var (
 )
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa446645.aspx
-func GetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, owner, group **windows.SID, dacl, sacl, secDesc *windows.Handle) error {
+func GetNamedSecurityInfo(objectName string, objectType int32, secInfo uint32, owner, group **windows.SID, dacl **ACL, sacl, secDesc *windows.Handle) error {
 	ret, _, err := procGetNamedSecurityInfoW.Call(
 		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(objectName))),
 		uintptr(objectType),

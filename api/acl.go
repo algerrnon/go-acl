@@ -64,6 +64,55 @@ var (
 	procSetEntriesInAclW = advapi32.MustFindProc("SetEntriesInAclW")
 )
 
+// https://msdn.microsoft.com/ja-jp/library/windows/desktop/aa374931.aspx
+type ACL struct {
+	ACLRevision byte
+	Sbz1        byte
+	ACLSize     uint16
+	ACECount    uint16
+	Sbz2        uint16
+	ACEHeader   ACEHeader
+}
+
+func (a *ACL) GetACEList() []ACE {
+	result := make([]ACE, a.ACECount)
+	p := unsafe.Pointer(&a.ACEHeader)
+	for i := uint16(0); i < a.ACECount; i++ {
+		hCurr := (*ACEHeader)(p)
+		switch hCurr.ACEType {
+		case ACCESS_ALLOWED_ACE_TYPE:
+			result[i] = (*AccessAllowedACE)(p)
+		case ACCESS_ALLOWED_CALLBACK_ACE_TYPE:
+			result[i] = (*AccessAllowedCallbackACE)(p)
+		case ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE:
+			result[i] = (*AccessAllowedCallbackObjectACE)(p)
+		case ACCESS_ALLOWED_OBJECT_ACE_TYPE:
+			result[i] = (*AccessAllowedObjectACE)(p)
+		case ACCESS_DENIED_ACE_TYPE:
+			result[i] = (*AccessDeniedACE)(p)
+		case ACCESS_DENIED_CALLBACK_ACE_TYPE:
+			result[i] = (*AccessDeniedCallbackACE)(p)
+		case ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE:
+			result[i] = (*AccessDeniedCallbackObjectACE)(p)
+		case ACCESS_DENIED_OBJECT_ACE_TYPE:
+			result[i] = (*AccessDeniedObjectACE)(p)
+		case SYSTEM_AUDIT_ACE_TYPE:
+			result[i] = (*SystemAuditACE)(p)
+		case SYSTEM_AUDIT_CALLBACK_ACE_TYPE:
+			result[i] = (*SystemAuditCallbackACE)(p)
+		case SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE:
+			result[i] = (*SystemAuditCallbackObjectACE)(p)
+		case SYSTEM_AUDIT_OBJECT_ACE_TYPE:
+			result[i] = (*SystemAuditCallbackACE)(p)
+		case SYSTEM_MANDATORY_LABEL_ACE_TYPE:
+			result[i] = (*SystemMandatoryLabelACE)(p)
+		}
+
+		p = unsafe.Pointer(uintptr(p) + uintptr(hCurr.ACESize))
+	}
+	return result
+}
+
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa379636.aspx
 type Trustee struct {
 	MultipleTrustee          *Trustee
