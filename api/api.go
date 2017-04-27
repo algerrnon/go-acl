@@ -1,4 +1,5 @@
-// Windows API functions for manipulating ACLs.
+// +build windows
+
 package api
 
 import (
