@@ -3,6 +3,8 @@
 package api
 
 import (
+	"errors"
+
 	"golang.org/x/sys/windows"
 
 	"unsafe"
@@ -11,6 +13,17 @@ import (
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ee207397.aspx
 const (
 	SECURITY_MAX_SID_SIZE = 68
+)
+
+// https://msdn.microsoft.com/ja-jp/library/windows/desktop/aa366723.aspx
+const (
+	LHND          = 0x0042
+	LMEM_FIXED    = 0x0000
+	LMEM_MOVEABLE = 0x0002
+	LMEM_ZEROINIT = 0x0040
+	LPTR          = LMEM_ZEROINIT | LMEM_FIXED
+	NONZEROLHND   = LMEM_MOVEABLE
+	NONZEROLPTR   = LMEM_FIXED
 )
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/aa379650.aspx
@@ -127,5 +140,20 @@ func CreateWellKnownSid(sidType int32, sidDomain, sid *windows.SID, sidLen *uint
 	if ret == 0 {
 		return err
 	}
+
 	return nil
+}
+
+func AllocSID() (*windows.SID, uint32, error) {
+	sidSize := uint32(SECURITY_MAX_SID_SIZE)
+	localSID, _, _ := procLocalAlloc.Call(LMEM_FIXED, uintptr(sidSize))
+	if localSID == 0 {
+		return nil, 0, errors.New("LocalAlloc() failed.")
+	}
+
+	return (*windows.SID)(unsafe.Pointer(localSID)), sidSize, nil
+}
+
+func FreeSID(sid *windows.SID) {
+	procLocalFree.Call(uintptr(unsafe.Pointer(sid)))
 }
